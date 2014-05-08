@@ -1,0 +1,126 @@
+#
+# A simple theme that displays relevant, contextual information.
+# Fork viespejo theme
+#
+# Authors:
+#   Vicente Espejo <viespejo@gmail.com>
+#
+#
+
+# Load dependencies.
+pmodload 'helper'
+
+function prompt_viespejo_pwd {
+  local pwd="${PWD/#$HOME/~}"
+
+  if [[ "$pwd" == (#m)[/~] ]]; then
+    _prompt_viespejo_pwd="$MATCH"
+    unset MATCH
+  else
+    _prompt_viespejo_pwd="${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}"
+  fi
+}
+
+function prompt_viespejo_precmd {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+
+  # Format PWD.
+  prompt_viespejo_pwd
+
+  # Get Git repository information.
+  if (( $+functions[git-info] )); then
+    git-info
+  fi
+}
+
+function calc_elapsed_time () {
+  if [[ $_elapsed -ge 3600 ]]; then
+    let "timer_hours = $_elapsed / 3600"
+    let "remainder = $_elapsed % 3600"
+    let "timer_minutes = $remainder / 60"
+    let "timer_seconds = $remainder % 60"
+    print -P "%B%F{red}Elapsed Time: ${timer_hours}h${timer_minutes}m${timer_seconds}s%b"
+  elif [[ $_elapsed -ge 60 ]]; then
+    let "timer_minutes = $_elapsed / 60"
+    let "timer_seconds = $_elapsed % 60"
+    print -P "%B%F{yellow}Elapsed Time: ${timer_minutes}m${timer_seconds}s%b"
+  #elif [[ $_elapsed -ge 10 ]]; then
+  else
+    print -P "%B%F{green}Elapsed Time: ${_elapsed}s%b"
+  fi
+}
+function stop_counting () {
+  # did start_counting run or is _start still -1?
+  if (( _start >= 0 )) ; then
+    typeset -ig _elapsed=$(( SECONDS-_start ))
+  fi
+
+  # did it run for longer than x?
+  #if (( _elapsed >= 1 )) ; then
+    # my history indexes from 10000, so it looks like:
+    # 10084  sleep 2
+    calc_elapsed_time
+    print -P "%B%F{green}End: [%D{%Y-%m-%d %H:%M:%S}]%b"
+    _lastcmd=`history|tail -1`
+    print -P "%B%F{green}Command: $_lastcmd[7,99]%b"
+    #say -r300 "Finished! $_lastcmd[7,99]" &|
+  #fi
+
+  # reset counters
+    _start=-1
+  _elapsed=-1
+}
+
+function start_counting () {
+   typeset -ig _start=SECONDS
+   print -P "%B%F{green}Start: [%D{%Y-%m-%d %H:%M:%S}]%b"
+}
+
+preexec_functions+=(start_counting)
+precmd_functions+=(stop_counting)
+
+function prompt_viespejo_setup {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+  prompt_opts=(cr percent subst)
+
+  # Load required functions.
+  autoload -Uz add-zsh-hook
+
+  # Add hook for calling git-info before each command.
+  add-zsh-hook precmd prompt_viespejo_precmd
+
+  # Set editor-info parameters.
+  zstyle ':prezto:module:editor:info:completing' format '%B%F{red}...%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary' format ' %B%F{red}❯%F{yellow}❯%F{green}❯%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary:overwrite' format ' %F{red}♺%f'
+  zstyle ':prezto:module:editor:info:keymap:alternate' format ' %B%F{green}❮%F{yellow}❮%F{red}❮%f%b'
+
+  # Set git-info parameters.
+  zstyle ':prezto:module:git:info' verbose 'yes'
+  zstyle ':prezto:module:git:info:action' format ':%%B%F{yellow}%s%f%%b'
+  zstyle ':prezto:module:git:info:added' format ' %%B%F{green}✚%f%%b'
+  zstyle ':prezto:module:git:info:ahead' format ' %%B%F{yellow}⬆%f%%b'
+  zstyle ':prezto:module:git:info:behind' format ' %%B%F{yellow}⬇%f%%b'
+  zstyle ':prezto:module:git:info:branch' format ':%F{green}%b%f'
+  zstyle ':prezto:module:git:info:commit' format ':%F{green}%.7c%f'
+  zstyle ':prezto:module:git:info:deleted' format ' %%B%F{red}✖%f%%b'
+  zstyle ':prezto:module:git:info:modified' format ' %%B%F{blue}✱%f%%b'
+  zstyle ':prezto:module:git:info:position' format ':%F{red}%p%f'
+  zstyle ':prezto:module:git:info:renamed' format ' %%B%F{magenta}➜%f%%b'
+  zstyle ':prezto:module:git:info:stashed' format ' %%B%F{cyan}✭%f%%b'
+  zstyle ':prezto:module:git:info:unmerged' format ' %%B%F{yellow}═%f%%b'
+  zstyle ':prezto:module:git:info:untracked' format ' %%B%F{white}◼%f%%b'
+  zstyle ':prezto:module:git:info:keys' format \
+    'prompt' ' %F{blue}git%f$(coalesce "%b" "%p" "%c")%s' \
+    'rprompt' '%A%B%S%a%d%m%r%U%u'
+
+  # Define prompts.
+  PROMPT='%F{cyan}${_prompt_viespejo_pwd}%f${git_info:+${(e)git_info[prompt]}}%(!. %B%F{red}#%f%b.)${editor_info[keymap]} '
+  RPROMPT='${editor_info[overwrite]}%(?:: %F{red}⏎%f)${VIM:+" %B%F{green}V%f%b"}${git_info[rprompt]} %F{blue}%f'
+  SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
+}
+
+prompt_viespejo_setup "$@"
+
