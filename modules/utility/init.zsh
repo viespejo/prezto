@@ -58,6 +58,7 @@ alias po='popd'
 alias pu='pushd'
 alias rm="${aliases[rm]:-rm} -i"
 alias type='type -a'
+alias gk='gitk --all --date-order'
 
 # ls
 if is-callable 'dircolors'; then
