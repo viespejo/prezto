@@ -12,3 +12,18 @@ fi
 
 # Customize to your needs...
 
+typeset -U path
+path=(/home/its32ve1/.gem/ruby/2.1.0/bin $path)
+alias tunnel_mysql_tresmadc19='echo '\''Connecting to tresmadc19...'\'';ssh -Nf tresmadc19 -L 3307:127.0.0.1:3306'
+alias tunnel_mysql_tresbadc19='echo '\''Connecting to tresbadc19...'\'';ssh -Nf tresbadc19 -L 3309:127.0.0.1:3306'
+alias tunnel_mysql_denver='echo '\''Connecting to denver...'\'';ssh -Nf vincente@denver -L 3308:127.0.0.1:3306'
+alias tunnel_apache_denver='echo '\''Connecting to denver...'\'';ssh -Nf vincente@denver -L 172.19.115.171:9080:localhost:80'
+alias tomtoolpath='cd /www/ZendApplications/tomtool'
+
+# Base16 Shell
+BASE16_SHELL="$HOME/.config/base16-builder/output/shell/base16-default.dark.sh"
+[[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
+
+export TERM=xterm-256color
+# unset GREP_OPTIONS
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

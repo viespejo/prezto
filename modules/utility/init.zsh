@@ -58,7 +58,7 @@ alias po='popd'
 alias pu='pushd'
 alias rm="${aliases[rm]:-rm} -i"
 alias type='type -a'
-alias gk='gitk --all --date-order'
+alias gk='gitk --all --date-order&'
 
 # ls
 if is-callable 'dircolors'; then
@@ -148,6 +148,10 @@ fi
 # Serves a directory via HTTP.
 alias http-serve='python -m SimpleHTTPServer'
 
+# XDebug PHP 
+#
+alias phpxd='xd'
+
 #
 # Functions
 #
@@ -185,5 +189,10 @@ function find-exec {
 # Displays user owned processes status.
 function psu {
   ps -U "${1:-$USER}" -o 'pid,%cpu,%mem,command' "${(@)argv[2,-1]}"
+}
+function xd {
+    export XDEBUG_CONFIG="idekey=XDEBUG_VIESPEJO";
+    php $*
+    unset XDEBUG_CONFIG
 }
 
